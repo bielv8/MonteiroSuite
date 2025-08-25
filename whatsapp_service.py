@@ -70,14 +70,13 @@ class WhatsAppService:
                 
                 # Save message to database
                 client = Client.query.filter_by(whatsapp=to_phone).first()
-                message = WhatsAppMessage(
-                    client_id=client.id if client else None,
-                    phone_number=to_phone,
-                    message_id=result.get('messages', [{}])[0].get('id'),
-                    content=message_text,
-                    direction='outgoing',
-                    status='sent'
-                )
+                message = WhatsAppMessage()
+                message.client_id = client.id if client else None
+                message.phone_number = to_phone
+                message.message_id = result.get('messages', [{}])[0].get('id')
+                message.content = message_text
+                message.direction = 'outgoing'
+                message.status = 'sent'
                 db.session.add(message)
                 db.session.commit()
                 
@@ -136,25 +135,23 @@ class WhatsAppService:
                 client = Client.query.filter_by(whatsapp=phone_number).first()
                 if not client:
                     # Create new client from phone number
-                    client = Client(
-                        name=f"Cliente {phone_number}",
-                        whatsapp=phone_number,
-                        phone=phone_number,
-                        status='prospect'
-                    )
+                    client = Client()
+                    client.name = f"Cliente {phone_number}"
+                    client.whatsapp = phone_number
+                    client.phone = phone_number
+                    client.status = 'prospect'
                     db.session.add(client)
                     db.session.flush()
                 
                 # Save message
-                message = WhatsAppMessage(
-                    client_id=client.id,
-                    phone_number=phone_number,
-                    message_id=message_id,
-                    content=content,
-                    message_type=message_type,
-                    direction='incoming',
-                    timestamp=datetime.fromtimestamp(int(timestamp))
-                )
+                message = WhatsAppMessage()
+                message.client_id = client.id
+                message.phone_number = phone_number
+                message.message_id = message_id
+                message.content = content
+                message.message_type = message_type
+                message.direction = 'incoming'
+                message.timestamp = datetime.fromtimestamp(int(timestamp))
                 db.session.add(message)
             
             db.session.commit()

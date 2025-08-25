@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 def log_activity(action, description=None):
     """Log user activity"""
     if current_user.is_authenticated:
-        log = ActivityLog(
-            user_id=current_user.id,
-            action=action,
-            description=description,
-            ip_address=request.remote_addr
-        )
+        log = ActivityLog()
+        log.user_id = current_user.id
+        log.action = action
+        log.description = description
+        log.ip_address = request.remote_addr
+        
         db.session.add(log)
         db.session.commit()
 
@@ -38,7 +38,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         
-        if user and check_password_hash(user.password_hash, form.password.data):
+        if user and user.password_hash and form.password.data and check_password_hash(user.password_hash, form.password.data):
             if user.active:
                 login_user(user, remember=form.remember_me.data)
                 user.last_login = datetime.utcnow()
@@ -120,7 +120,10 @@ def kanban():
         ]
         
         for name, color, position in default_columns:
-            column = KanbanColumn(name=name, color=color, order_position=position)
+            column = KanbanColumn()
+            column.name = name
+            column.color = color
+            column.order_position = position
             db.session.add(column)
         
         db.session.commit()
@@ -135,24 +138,25 @@ def kanban():
 @login_required
 def create_kanban_card():
     form = KanbanCardForm()
-    form.client_id.choices = [(0, 'Selecionar cliente...')] + [(c.id, c.name) for c in Client.query.all()]
-    form.responsible_id.choices = [(0, 'Selecionar responsável...')] + [(u.id, u.name) for u in User.query.filter_by(active=True).all()]
+    clients = Client.query.all()
+    users = User.query.filter_by(active=True).all()
+    form.client_id.choices = [('0', 'Selecionar cliente...')] + [(str(c.id), c.name) for c in clients]  # type: ignore
+    form.responsible_id.choices = [('0', 'Selecionar responsável...')] + [(str(u.id), u.name) for u in users]  # type: ignore
     
     if form.validate_on_submit():
         # Get the column and calculate position
         column_id = request.form.get('column_id', type=int)
         max_position = db.session.query(db.func.max(KanbanCard.order_position)).filter_by(column_id=column_id).scalar() or 0
         
-        card = KanbanCard(
-            title=form.title.data,
-            description=form.description.data,
-            client_id=form.client_id.data if form.client_id.data != 0 else None,
-            column_id=column_id,
-            responsible_id=form.responsible_id.data if form.responsible_id.data != 0 else None,
-            priority=form.priority.data,
-            due_date=form.due_date.data,
-            order_position=max_position + 1
-        )
+        card = KanbanCard()
+        card.title = form.title.data
+        card.description = form.description.data
+        card.client_id = int(form.client_id.data) if form.client_id.data != '0' else None
+        card.column_id = column_id
+        card.responsible_id = int(form.responsible_id.data) if form.responsible_id.data != '0' else None
+        card.priority = form.priority.data
+        card.due_date = form.due_date.data
+        card.order_position = max_position + 1
         
         db.session.add(card)
         db.session.commit()
@@ -167,8 +171,9 @@ def create_kanban_card():
 @login_required
 def move_kanban_card(card_id):
     card = KanbanCard.query.get_or_404(card_id)
-    new_column_id = request.json.get('column_id')
-    new_position = request.json.get('position', 1)
+    data = request.get_json()
+    new_column_id = data.get('column_id') if data else None
+    new_position = data.get('position', 1) if data else 1
     
     # Update other cards positions in the new column
     cards_in_column = KanbanCard.query.filter_by(column_id=new_column_id).filter(
@@ -223,21 +228,20 @@ def new_client():
     form = ClientForm()
     
     if form.validate_on_submit():
-        client = Client(
-            name=form.name.data,
-            email=form.email.data,
-            phone=form.phone.data,
-            whatsapp=form.whatsapp.data,
-            cpf_cnpj=form.cpf_cnpj.data,
-            address=form.address.data,
-            city=form.city.data,
-            state=form.state.data,
-            zip_code=form.zip_code.data,
-            birth_date=form.birth_date.data,
-            insurance_type=form.insurance_type.data,
-            notes=form.notes.data,
-            status=form.status.data
-        )
+        client = Client()
+        client.name = form.name.data
+        client.email = form.email.data
+        client.phone = form.phone.data
+        client.whatsapp = form.whatsapp.data
+        client.cpf_cnpj = form.cpf_cnpj.data
+        client.address = form.address.data
+        client.city = form.city.data
+        client.state = form.state.data
+        client.zip_code = form.zip_code.data
+        client.birth_date = form.birth_date.data
+        client.insurance_type = form.insurance_type.data
+        client.notes = form.notes.data
+        client.status = form.status.data
         
         db.session.add(client)
         db.session.commit()
@@ -298,14 +302,15 @@ def whatsapp_webhook():
         challenge = request.args.get('hub.challenge')
         
         # You should verify the token here
-        if verify_token == 'your_verify_token':
+        if verify_token == 'your_verify_token' and challenge:
             return challenge
         else:
             return 'Invalid verify token', 403
     
-    elif request.method == 'POST':
+    else:  # POST
         # Process incoming messages
-        whatsapp_service.process_incoming_message(request.json)
+        if request.json:
+            whatsapp_service.process_incoming_message(request.json)
         return 'OK', 200
 
 @app.route('/users')
@@ -336,14 +341,17 @@ def new_user():
         if existing_user:
             flash('Usuário ou email já existem.', 'danger')
         else:
-            user = User(
-                username=form.username.data,
-                email=form.email.data,
-                name=form.name.data,
-                password_hash=generate_password_hash(form.password.data),
-                role=form.role.data,
-                active=form.active.data
-            )
+            if not form.password.data:
+                flash('Senha é obrigatória para novos usuários.', 'danger')
+                return render_template('user_form.html', form=form, title='Novo Usuário')
+                
+            user = User()
+            user.username = form.username.data
+            user.email = form.email.data
+            user.name = form.name.data
+            user.password_hash = generate_password_hash(form.password.data)
+            user.role = form.role.data
+            user.active = form.active.data
             
             db.session.add(user)
             db.session.commit()
@@ -369,6 +377,76 @@ def api_kanban_cards():
         'column_id': card.column_id,
         'order_position': card.order_position
     } for card in cards])
+
+# Add missing API routes
+@app.route('/api/whatsapp/messages')
+@login_required
+def api_whatsapp_messages():
+    phone = request.args.get('phone')
+    if phone:
+        messages = WhatsAppMessage.query.filter_by(phone_number=phone).order_by(WhatsAppMessage.timestamp.asc()).all()
+        return jsonify({
+            'messages': [{
+                'content': msg.content,
+                'direction': msg.direction,
+                'timestamp': msg.timestamp.isoformat(),
+                'message_type': msg.message_type
+            } for msg in messages]
+        })
+    return jsonify({'messages': []})
+
+@app.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    if not current_user.is_admin():
+        flash('Acesso negado. Apenas administradores podem editar usuários.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    user = User.query.get_or_404(user_id)
+    form = UserForm(obj=user)
+    
+    if form.validate_on_submit():
+        # Check if username or email already exists (excluding current user)
+        existing_user = User.query.filter(
+            db.or_(User.username == form.username.data, User.email == form.email.data),
+            User.id != user_id
+        ).first()
+        
+        if existing_user:
+            flash('Usuário ou email já existem.', 'danger')
+        else:
+            user.username = form.username.data
+            user.email = form.email.data
+            user.name = form.name.data
+            user.role = form.role.data
+            user.active = form.active.data
+            
+            # Only update password if provided
+            if form.password.data:
+                user.password_hash = generate_password_hash(form.password.data)
+            
+            db.session.commit()
+            
+            log_activity('user_updated', f'Usuário atualizado: {user.username}')
+            flash('Usuário atualizado com sucesso!', 'success')
+            return redirect(url_for('users'))
+    
+    return render_template('user_form.html', form=form, title='Editar Usuário', user=user)
+
+@app.route('/users/<int:user_id>/toggle', methods=['POST'])
+@login_required
+def toggle_user_status(user_id):
+    if not current_user.is_admin():
+        return jsonify({'success': False, 'error': 'Acesso negado'})
+    
+    user = User.query.get_or_404(user_id)
+    user.active = not user.active
+    db.session.commit()
+    
+    action = 'ativado' if user.active else 'desativado'
+    log_activity('user_status_changed', f'Usuário {action}: {user.username}')
+    
+    return jsonify({'success': True})
 
 # Error handlers
 @app.errorhandler(404)

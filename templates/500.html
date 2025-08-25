@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Erro interno - Monteiro Corretora{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-page">
+                <h1 class="display-1 text-danger">500</h1>
+                <h2 class="mb-4">Erro interno do servidor</h2>
+                <p class="lead text-muted mb-4">
+                    Ocorreu um erro interno no servidor. Nossa equipe foi notificada e está trabalhando para resolver o problema.
+                </p>
+                <div class="mb-4">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                </div>
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Voltar ao Início
+                    </a>
+                    <a href="javascript:location.reload()" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo me-2"></i>Tentar Novamente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-page {
+    padding: 4rem 0;
+}
+
+.display-1 {
+    font-size: 8rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 4rem;
+    }
+}
+</style>
+{% endblock %}

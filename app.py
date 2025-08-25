@@ -34,7 +34,7 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = 'login'  # type: ignore
     login_manager.login_message = 'Por favor, faça login para acessar esta página.'
     login_manager.login_message_category = 'info'
     
@@ -49,13 +49,13 @@ def create_app():
         
         admin = User.query.filter_by(username='admin').first()
         if not admin:
-            admin = User(
-                username='admin',
-                email='admin@monteirocorretora.com',
-                name='Administrador',
-                role='admin',
-                password_hash=generate_password_hash('admin123')
-            )
+            admin = User()
+            admin.username = 'admin'
+            admin.email = 'admin@monteirocorretora.com'
+            admin.name = 'Administrador'
+            admin.role = 'admin'
+            admin.password_hash = generate_password_hash('admin123')
+            
             db.session.add(admin)
             db.session.commit()
             logging.info("Default admin user created: admin/admin123")
