@@ -74,12 +74,12 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Apólices Vencendo
+                            Total de Operações
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ expiring_policies }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cards }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        <i class="fas fa-tasks fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -116,78 +116,28 @@
         </div>
     </div>
     
-    <!-- Recent WhatsApp Messages -->
+    <!-- Quick Actions -->
     <div class="col-xl-4 col-lg-5">
         <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Mensagens Recentes</h6>
-                <a href="{{ url_for('whatsapp') }}" class="btn btn-sm btn-success">
-                    <i class="fab fa-whatsapp me-1"></i>Ver WhatsApp
-                </a>
-            </div>
-            <div class="card-body">
-                {% if recent_messages %}
-                    {% for message in recent_messages %}
-                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                        <div class="me-3">
-                            {% if message.direction == 'incoming' %}
-                                <i class="fas fa-arrow-down text-success"></i>
-                            {% else %}
-                                <i class="fas fa-arrow-up text-primary"></i>
-                            {% endif %}
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="small text-muted">{{ message.phone_number }}</div>
-                            <div class="text-truncate">{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</div>
-                            <div class="small text-muted">{{ message.timestamp.strftime('%d/%m %H:%M') }}</div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="text-center text-muted py-3">
-                        <i class="fab fa-whatsapp fa-2x mb-2"></i>
-                        <p>Nenhuma mensagem recente</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activities -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Ações Rápidas</h6>
             </div>
             <div class="card-body">
-                {% if recent_activities %}
-                    <div class="table-responsive">
-                        <table class="table table-borderless">
-                            <tbody>
-                                {% for activity in recent_activities %}
-                                <tr>
-                                    <td class="text-center" style="width: 50px;">
-                                        <i class="fas fa-clock text-muted"></i>
-                                    </td>
-                                    <td>
-                                        <strong>{{ activity.user.name }}</strong> {{ activity.description or activity.action }}
-                                    </td>
-                                    <td class="text-muted text-end">
-                                        {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center text-muted py-3">
-                        <i class="fas fa-history fa-2x mb-2"></i>
-                        <p>Nenhuma atividade recente</p>
-                    </div>
-                {% endif %}
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('new_client') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Novo Cliente
+                    </a>
+                    <a href="{{ url_for('kanban') }}" class="btn btn-info">
+                        <i class="fas fa-plus me-2"></i>Nova Operação
+                    </a>
+                    <a href="{{ url_for('clients') }}" class="btn btn-success">
+                        <i class="fas fa-search me-2"></i>Buscar Cliente
+                    </a>
+                    {% if current_user.is_admin() %}
+                    <a href="{{ url_for('new_user') }}" class="btn btn-secondary">
+                        <i class="fas fa-user-cog me-2"></i>Novo Usuário
+                    </a>
+                    {% endif %}
             </div>
         </div>
     </div>

@@ -20,16 +20,9 @@ def create_app():
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
-    # Database configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///monteiro_corretora.db")
+    # Database configuration - Using SQLite for lightweight deployment
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///monteiro_lite.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-    }
-    
-    # WhatsApp API configuration
-    app.config["WHATSAPP_API_TOKEN"] = os.environ.get("WHATSAPP_API_TOKEN", "EAAI38YgiZB8kBPYkeuarcqS9yjSeOK7OFJ1jgX09VrZCPuOHZBJNRZCPfjtJPSniKDKBs4u2d4uyMLDyz5uJCeTDsZAad0LL1axTYT89WxaxxKmaUohhCg6SDUrZCxZAFNJv4RLzBz2TZC1NBMffaZBWGSBG2GlQRsRq4p6lsweGmg6MGjICwEA04UvUCM7n8cqw2JUczHz8jCRVSYO9pnbZAqYqvMVEyomO2E4efXXQMOfzW8ouVxqwQL7kxDZA5KwzAZDZD")
     
     # Initialize extensions
     db.init_app(app)

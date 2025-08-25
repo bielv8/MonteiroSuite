@@ -5,23 +5,14 @@ from datetime import datetime, date
 import logging
 
 from app import app, db
-from models import User, Client, Policy, KanbanColumn, KanbanCard, WhatsAppMessage, ActivityLog
-from forms import LoginForm, ClientForm, KanbanCardForm, UserForm, WhatsAppMessageForm
-from whatsapp_service import whatsapp_service
+from models import User, Client, KanbanColumn, KanbanCard
+from forms import LoginForm, ClientForm, KanbanCardForm, UserForm
 
 logger = logging.getLogger(__name__)
 
 def log_activity(action, description=None):
-    """Log user activity"""
-    if current_user.is_authenticated:
-        log = ActivityLog()
-        log.user_id = current_user.id
-        log.action = action
-        log.description = description
-        log.ip_address = request.remote_addr
-        
-        db.session.add(log)
-        db.session.commit()
+    """Simplified logging - removed to optimize resources"""
+    pass
 
 @app.route('/')
 def index():
@@ -41,7 +32,6 @@ def login():
         if user and user.password_hash and form.password.data and check_password_hash(user.password_hash, form.password.data):
             if user.active:
                 login_user(user, remember=form.remember_me.data)
-                user.last_login = datetime.utcnow()
                 db.session.commit()
                 
                 log_activity('login', 'Usuário fez login no sistema')
@@ -73,38 +63,20 @@ def dashboard():
     active_clients = Client.query.filter_by(status='ativo').count()
     prospects = Client.query.filter_by(status='prospect').count()
     
-    # Get recent activities
-    recent_activities = ActivityLog.query.order_by(
-        ActivityLog.timestamp.desc()
-    ).limit(10).all()
-    
     # Get kanban statistics
     kanban_stats = {}
     columns = KanbanColumn.query.filter_by(active=True).order_by(KanbanColumn.order_position).all()
     for column in columns:
         kanban_stats[column.name] = KanbanCard.query.filter_by(column_id=column.id).count()
     
-    # Get recent WhatsApp messages
-    recent_messages = WhatsAppMessage.query.order_by(
-        WhatsAppMessage.timestamp.desc()
-    ).limit(5).all()
-    
-    # Get policies expiring soon (next 30 days)
-    from datetime import timedelta
-    thirty_days_from_now = date.today() + timedelta(days=30)
-    expiring_policies = Policy.query.filter(
-        Policy.end_date <= thirty_days_from_now,
-        Policy.status == 'ativa'
-    ).count()
+    total_cards = KanbanCard.query.count()
     
     return render_template('dashboard.html',
                          total_clients=total_clients,
                          active_clients=active_clients,
                          prospects=prospects,
-                         recent_activities=recent_activities,
                          kanban_stats=kanban_stats,
-                         recent_messages=recent_messages,
-                         expiring_policies=expiring_policies)
+                         total_cards=total_cards)
 
 @app.route('/kanban')
 @login_required
@@ -139,9 +111,7 @@ def kanban():
 def create_kanban_card():
     form = KanbanCardForm()
     clients = Client.query.all()
-    users = User.query.filter_by(active=True).all()
     form.client_id.choices = [('0', 'Selecionar cliente...')] + [(str(c.id), c.name) for c in clients]  # type: ignore
-    form.responsible_id.choices = [('0', 'Selecionar responsável...')] + [(str(u.id), u.name) for u in users]  # type: ignore
     
     if form.validate_on_submit():
         # Get the column and calculate position
@@ -153,9 +123,7 @@ def create_kanban_card():
         card.description = form.description.data
         card.client_id = int(form.client_id.data) if form.client_id.data != '0' else None
         card.column_id = column_id
-        card.responsible_id = int(form.responsible_id.data) if form.responsible_id.data != '0' else None
         card.priority = form.priority.data
-        card.due_date = form.due_date.data
         card.order_position = max_position + 1
         
         db.session.add(card)
@@ -232,13 +200,6 @@ def new_client():
         client.name = form.name.data
         client.email = form.email.data
         client.phone = form.phone.data
-        client.whatsapp = form.whatsapp.data
-        client.cpf_cnpj = form.cpf_cnpj.data
-        client.address = form.address.data
-        client.city = form.city.data
-        client.state = form.state.data
-        client.zip_code = form.zip_code.data
-        client.birth_date = form.birth_date.data
         client.insurance_type = form.insurance_type.data
         client.notes = form.notes.data
         client.status = form.status.data
@@ -270,48 +231,7 @@ def edit_client(client_id):
     
     return render_template('client_form.html', form=form, title='Editar Cliente', client=client)
 
-@app.route('/whatsapp')
-@login_required
-def whatsapp():
-    messages = whatsapp_service.get_messages()
-    clients = Client.query.filter(Client.whatsapp.isnot(None)).all()
-    
-    return render_template('whatsapp.html', messages=messages, clients=clients)
-
-@app.route('/whatsapp/send', methods=['POST'])
-@login_required
-def send_whatsapp():
-    form = WhatsAppMessageForm()
-    
-    if form.validate_on_submit():
-        result = whatsapp_service.send_message(form.phone_number.data, form.message.data)
-        
-        if result:
-            log_activity('whatsapp_sent', f'Mensagem enviada para {form.phone_number.data}')
-            flash('Mensagem enviada com sucesso!', 'success')
-        else:
-            flash('Erro ao enviar mensagem. Verifique a configuração do WhatsApp.', 'danger')
-    
-    return redirect(url_for('whatsapp'))
-
-@app.route('/whatsapp/webhook', methods=['GET', 'POST'])
-def whatsapp_webhook():
-    if request.method == 'GET':
-        # Webhook verification
-        verify_token = request.args.get('hub.verify_token')
-        challenge = request.args.get('hub.challenge')
-        
-        # You should verify the token here
-        if verify_token == 'your_verify_token' and challenge:
-            return challenge
-        else:
-            return 'Invalid verify token', 403
-    
-    else:  # POST
-        # Process incoming messages
-        if request.json:
-            whatsapp_service.process_incoming_message(request.json)
-        return 'OK', 200
+# WhatsApp funcionalidade removida para otimização
 
 @app.route('/users')
 @login_required
@@ -378,22 +298,7 @@ def api_kanban_cards():
         'order_position': card.order_position
     } for card in cards])
 
-# Add missing API routes
-@app.route('/api/whatsapp/messages')
-@login_required
-def api_whatsapp_messages():
-    phone = request.args.get('phone')
-    if phone:
-        messages = WhatsAppMessage.query.filter_by(phone_number=phone).order_by(WhatsAppMessage.timestamp.asc()).all()
-        return jsonify({
-            'messages': [{
-                'content': msg.content,
-                'direction': msg.direction,
-                'timestamp': msg.timestamp.isoformat(),
-                'message_type': msg.message_type
-            } for msg in messages]
-        })
-    return jsonify({'messages': []})
+# API routes simplificadas
 
 @app.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required

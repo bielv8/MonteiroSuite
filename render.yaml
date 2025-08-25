@@ -1,22 +1,12 @@
 services:
   - type: web
-    name: monteiro-corretora
+    name: monteiro-lite
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install .
     startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: monteiro-db
-          property: connectionString
-
-databases:
-  - name: monteiro-db
-    databaseName: monteiro_corretora
-    user: monteiro_user
-    plan: free
