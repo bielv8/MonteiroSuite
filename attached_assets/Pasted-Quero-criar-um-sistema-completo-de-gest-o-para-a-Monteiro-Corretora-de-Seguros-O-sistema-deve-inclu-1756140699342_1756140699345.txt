@@ -1,0 +1,99 @@
+Quero criar um sistema completo de gestão para a Monteiro Corretora de Seguros. O sistema deve incluir:
+
+1. Integração com WhatsApp Business API (Meta)
+
+Usar a chave de API fornecida.
+
+Permitir visualizar, organizar e responder mensagens de clientes diretamente no sistema.
+
+Centralizar todas as conversas em uma interface única.
+
+Criar respostas rápidas e mensagens automáticas (Ex: saudação, ausência, follow-up).
+
+Histórico completo de conversas vinculado ao cadastro do cliente.
+
+2. Gestão de Redes Sociais (Instagram e Facebook)
+
+Integração com contas da corretora no Instagram e Facebook.
+
+Agendamento de postagens.
+
+Caixa de entrada unificada (comentários e mensagens diretas).
+
+Relatórios de engajamento (curtidas, comentários, seguidores).
+
+Monitoramento de anúncios ativos e resultados básicos.
+
+3. Tela de Kanban de Operações
+
+Colunas personalizáveis (Ex: Atendimento inicial, Propostas enviadas, Vendas em andamento, Vendas concluídas, Pós-venda).
+
+Arrastar e soltar tarefas/cartões entre colunas.
+
+Cada cartão deve conter dados do cliente, status, responsável e histórico de interações.
+
+Notificações quando um cartão for atualizado ou movimentado.
+
+4. Gestão de Clientes e Apólices
+
+Cadastro completo de clientes (nome, contato, documentos, tipo de seguro, apólices vigentes, observações).
+
+Histórico de interações (WhatsApp, redes sociais, chamadas, reuniões).
+
+Agenda de vencimentos de apólices com alertas automáticos.
+
+Busca avançada com filtros (status, tipo de seguro, vendedor responsável, data de vencimento).
+
+5. Gestão de Usuários (Admin)
+
+O administrador pode criar, editar e remover usuários.
+
+Definir permissões de acesso (atendimento, vendas, administração, relatórios).
+
+Log de atividades (quem fez o quê e quando).
+
+6. Relatórios e Automação de Documentos
+
+Emissão de relatórios em Excel e PDF.
+
+Exportação de listagens de clientes, vendas, atendimentos e apólices.
+
+Relatórios automáticos semanais e mensais enviados por e-mail.
+
+Geração de propostas em PDF personalizadas com os dados do cliente.
+
+7. Financeiro Básico
+
+Controle de comissões recebidas e a receber.
+
+Registro de pagamentos de clientes.
+
+Relatórios financeiros (entradas, saídas, comissões, previsões).
+
+8. Agenda e Lembretes
+
+Calendário integrado com vencimentos, reuniões e atendimentos agendados.
+
+Envio de notificações automáticas (e-mail/WhatsApp) para lembretes de vencimento.
+
+Integração opcional com Google Agenda.
+
+9. Outros Recursos Úteis para o Dia a Dia
+
+Área de documentos para guardar contratos, apólices digitalizadas e comprovantes.
+
+Integração com serviços de assinatura digital.
+
+Dashboard com indicadores de performance (número de vendas, atendimentos em aberto, taxa de conversão, tempo médio de resposta).
+
+Módulo de FAQ interno com respostas rápidas para a equipe.
+
+Chat interno entre colaboradores.
+
+10. Requisitos Técnicos
+
+Sistema web responsivo e moderno.
+
+Autenticação segura (login, senha, recuperação, 2FA opcional).
+
+Painel de administração para parametrizações.
