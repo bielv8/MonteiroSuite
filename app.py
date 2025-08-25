@@ -64,6 +64,9 @@ def create_app():
 
 app = create_app()
 
+# Import routes after app is created to avoid circular import
+import routes
+
 @login_manager.user_loader
 def load_user(user_id):
     from models import User
