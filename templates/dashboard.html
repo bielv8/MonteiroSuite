@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Monteiro Corretora{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            <small class="text-muted">Visão geral do sistema</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total de Clientes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_clients }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Clientes Ativos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_clients }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Prospects
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ prospects }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Apólices Vencendo
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ expiring_policies }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Kanban Statistics -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Status das Operações</h6>
+                <a href="{{ url_for('kanban') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-columns me-1"></i>Ver Kanban
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for column_name, count in kanban_stats.items() %}
+                    <div class="col-md-6 col-xl-4 mb-3">
+                        <div class="card border-left-primary">
+                            <div class="card-body py-3">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    {{ column_name }}
+                                </div>
+                                <div class="h6 mb-0 font-weight-bold text-gray-800">{{ count }} cartões</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent WhatsApp Messages -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Mensagens Recentes</h6>
+                <a href="{{ url_for('whatsapp') }}" class="btn btn-sm btn-success">
+                    <i class="fab fa-whatsapp me-1"></i>Ver WhatsApp
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_messages %}
+                    {% for message in recent_messages %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="me-3">
+                            {% if message.direction == 'incoming' %}
+                                <i class="fas fa-arrow-down text-success"></i>
+                            {% else %}
+                                <i class="fas fa-arrow-up text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">{{ message.phone_number }}</div>
+                            <div class="text-truncate">{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</div>
+                            <div class="small text-muted">{{ message.timestamp.strftime('%d/%m %H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fab fa-whatsapp fa-2x mb-2"></i>
+                        <p>Nenhuma mensagem recente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td class="text-center" style="width: 50px;">
+                                        <i class="fas fa-clock text-muted"></i>
+                                    </td>
+                                    <td>
+                                        <strong>{{ activity.user.name }}</strong> {{ activity.description or activity.action }}
+                                    </td>
+                                    <td class="text-muted text-end">
+                                        {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-history fa-2x mb-2"></i>
+                        <p>Nenhuma atividade recente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+</style>
+{% endblock %}

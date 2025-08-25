@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Monteiro Corretora{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-user me-2"></i>{{ title }}
+            </h1>
+            <a href="{{ url_for('clients') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control") }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.status.label(class="form-label") }}
+                                {{ form.status(class="form-select") }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.status.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control") }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.cpf_cnpj.label(class="form-label") }}
+                                {{ form.cpf_cnpj(class="form-control") }}
+                                {% if form.cpf_cnpj.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.cpf_cnpj.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control") }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.whatsapp.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fab fa-whatsapp text-success"></i>
+                                    </span>
+                                    {{ form.whatsapp(class="form-control") }}
+                                </div>
+                                {% if form.whatsapp.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.whatsapp.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.birth_date.label(class="form-label") }}
+                                {{ form.birth_date(class="form-control") }}
+                                {% if form.birth_date.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.birth_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.insurance_type.label(class="form-label") }}
+                                {{ form.insurance_type(class="form-select") }}
+                                {% if form.insurance_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.insurance_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", rows="3") }}
+                        {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control") }}
+                                {% if form.city.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.state.label(class="form-label") }}
+                                {{ form.state(class="form-select") }}
+                                {% if form.state.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.state.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ form.zip_code.label(class="form-label") }}
+                                {{ form.zip_code(class="form-control") }}
+                                {% if form.zip_code.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.zip_code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="4") }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('clients') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Cliente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informações
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Dicas para cadastro:</small>
+                    <ul class="list-unstyled mt-2 small">
+                        <li><i class="fas fa-check text-success me-2"></i>Preencha pelo menos o nome completo</li>
+                        <li><i class="fas fa-check text-success me-2"></i>WhatsApp é importante para comunicação</li>
+                        <li><i class="fas fa-check text-success me-2"></i>CPF/CNPJ ajuda na organização</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Tipo de seguro facilita o atendimento</li>
+                    </ul>
+                </div>
+                
+                {% if client %}
+                <hr>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Cliente criado em:</small>
+                    <strong>{{ client.created_at.strftime('%d/%m/%Y às %H:%M') }}</strong>
+                </div>
+                
+                {% if client.updated_at != client.created_at %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Última atualização:</small>
+                    <strong>{{ client.updated_at.strftime('%d/%m/%Y às %H:%M') }}</strong>
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    {% if client.whatsapp %}
+                    <a href="https://wa.me/{{ client.whatsapp.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '') }}" 
+                       class="btn btn-outline-success btn-sm" target="_blank">
+                        <i class="fab fa-whatsapp me-2"></i>Abrir WhatsApp
+                    </a>
+                    {% endif %}
+                    
+                    {% if client.email %}
+                    <a href="mailto:{{ client.email }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-envelope me-2"></i>Enviar Email
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Format phone numbers
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInputs = document.querySelectorAll('input[name="phone"], input[name="whatsapp"]');
+    
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            
+            if (value.length <= 11) {
+                if (value.length <= 2) {
+                    value = value.replace(/(\d{0,2})/, '($1');
+                } else if (value.length <= 7) {
+                    value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+                } else {
+                    value = value.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+                }
+            }
+            
+            this.value = value;
+        });
+    });
+    
+    // Format CPF/CNPJ
+    const cpfCnpjInput = document.querySelector('input[name="cpf_cnpj"]');
+    if (cpfCnpjInput) {
+        cpfCnpjInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            
+            if (value.length <= 11) {
+                // CPF format
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            } else {
+                // CNPJ format
+                value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            }
+            
+            this.value = value;
+        });
+    }
+    
+    // Format ZIP code
+    const zipInput = document.querySelector('input[name="zip_code"]');
+    if (zipInput) {
+        zipInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            value = value.replace(/(\d{5})(\d{3})/, '$1-$2');
+            this.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}

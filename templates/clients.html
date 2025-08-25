@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes - Monteiro Corretora{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-users me-2"></i>Clientes
+            </h1>
+            <a href="{{ url_for('new_client') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Novo Cliente
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Nome, email ou telefone...">
+            </div>
+            
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos</option>
+                    <option value="prospect" {% if status_filter == 'prospect' %}selected{% endif %}>Prospect</option>
+                    <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search"></i>
+                </button>
+                <a href="{{ url_for('clients') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Clients Table -->
+<div class="card shadow">
+    <div class="card-body">
+        {% if clients.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>WhatsApp</th>
+                        <th>Tipo de Seguro</th>
+                        <th>Status</th>
+                        <th>Criado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients.items %}
+                    <tr>
+                        <td>
+                            <strong>{{ client.name }}</strong>
+                            {% if client.cpf_cnpj %}
+                            <br><small class="text-muted">{{ client.cpf_cnpj }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ client.email or '-' }}</td>
+                        <td>{{ client.phone or '-' }}</td>
+                        <td>
+                            {% if client.whatsapp %}
+                                <a href="https://wa.me/{{ client.whatsapp.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '') }}" 
+                                   target="_blank" class="text-success">
+                                    <i class="fab fa-whatsapp me-1"></i>{{ client.whatsapp }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.insurance_type %}
+                                <span class="badge bg-info">{{ client.insurance_type.title() }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.status == 'ativo' %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% elif client.status == 'prospect' %}
+                                <span class="badge bg-warning">Prospect</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ client.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('edit_client', client_id=client.id) }}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if client.whatsapp %}
+                                <button class="btn btn-outline-success" title="Enviar WhatsApp"
+                                        onclick="sendWhatsApp('{{ client.whatsapp }}', '{{ client.name }}')">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if clients.pages > 1 %}
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination justify-content-center mt-4">
+                {% if clients.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('clients', page=clients.prev_num, search=search, status=status_filter) }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in clients.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != clients.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('clients', page=page_num, search=search, status=status_filter) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if clients.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('clients', page=clients.next_num, search=search, status=status_filter) }}">Próximo</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h5>Nenhum cliente encontrado</h5>
+            <p class="text-muted">
+                {% if search or status_filter %}
+                    Tente ajustar os filtros de busca.
+                {% else %}
+                    Comece adicionando seu primeiro cliente.
+                {% endif %}
+            </p>
+            <a href="{{ url_for('new_client') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Novo Cliente
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- WhatsApp Modal -->
+<div class="modal fade" id="whatsappModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fab fa-whatsapp me-2"></i>Enviar WhatsApp
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('send_whatsapp') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="whatsapp_phone" name="phone_number">
+                    
+                    <div class="mb-3">
+                        <label for="whatsapp_client" class="form-label">Cliente</label>
+                        <input type="text" class="form-control" id="whatsapp_client" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="whatsapp_message" class="form-label">Mensagem</label>
+                        <textarea class="form-control" id="whatsapp_message" name="message" rows="4" required
+                                  placeholder="Digite sua mensagem..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Mensagens Rápidas</label>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start" 
+                                    onclick="setQuickMessage('Olá! Como posso ajudá-lo hoje?')">
+                                Saudação
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start"
+                                    onclick="setQuickMessage('Obrigado por entrar em contato. Em breve retornaremos.')">
+                                Agradecimento
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start"
+                                    onclick="setQuickMessage('Sua apólice está próxima do vencimento. Vamos renovar?')">
+                                Lembrete de Renovação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fab fa-whatsapp me-2"></i>Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendWhatsApp(phone, clientName) {
+    document.getElementById('whatsapp_phone').value = phone;
+    document.getElementById('whatsapp_client').value = clientName;
+    document.getElementById('whatsapp_message').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('whatsappModal'));
+    modal.show();
+}
+
+function setQuickMessage(message) {
+    document.getElementById('whatsapp_message').value = message;
+}
+</script>
+{% endblock %}

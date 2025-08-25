@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp - Monteiro Corretora{% endblock %}
+
+{% block extra_css %}
+<style>
+.whatsapp-container {
+    height: calc(100vh - 200px);
+    display: flex;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    width: 350px;
+    border-right: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.chat-input {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.conversation-item {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+    background-color: #e9ecef;
+}
+
+.conversation-item.active {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+}
+
+.message-incoming {
+    background-color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.message-outgoing {
+    background-color: #25d366;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+}
+
+.empty-chat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i class="fab fa-whatsapp me-2 text-success"></i>WhatsApp Business
+            </h1>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newMessageModal">
+                <i class="fas fa-plus me-2"></i>Nova Mensagem
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="whatsapp-container">
+    <!-- Sidebar with conversations -->
+    <div class="chat-sidebar">
+        <div class="chat-header">
+            <h6 class="mb-0">Conversas</h6>
+        </div>
+        
+        <div class="flex-grow-1 overflow-auto" id="conversations-list">
+            {% if messages %}
+                {% set conversations = {} %}
+                {% for message in messages %}
+                    {% if message.phone_number not in conversations %}
+                        {% set _ = conversations.update({message.phone_number: message}) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% for phone, last_message in conversations.items() %}
+                <div class="conversation-item" data-phone="{{ phone }}" onclick="loadConversation('{{ phone }}')">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">
+                                {{ last_message.client.name if last_message.client else phone }}
+                            </div>
+                            <div class="text-muted small text-truncate">
+                                {{ last_message.content[:50] }}{% if last_message.content|length > 50 %}...{% endif %}
+                            </div>
+                            <div class="text-muted small">
+                                {{ last_message.timestamp.strftime('%d/%m %H:%M') }}
+                            </div>
+                        </div>
+                        {% if last_message.direction == 'incoming' %}
+                        <div class="text-success">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center p-4 text-muted">
+                    <i class="fab fa-whatsapp fa-3x mb-3"></i>
+                    <p>Nenhuma conversa ainda</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Main chat area -->
+    <div class="chat-main">
+        <div class="chat-header" id="chat-header" style="display: none;">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="fw-bold" id="chat-contact-name"></div>
+                    <div class="text-muted small" id="chat-contact-phone"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="empty-chat">
+                <i class="fab fa-whatsapp fa-4x mb-3"></i>
+                <h5>Selecione uma conversa</h5>
+                <p>Escolha uma conversa à esquerda para ver as mensagens</p>
+            </div>
+        </div>
+        
+        <div class="chat-input" id="chat-input" style="display: none;">
+            <form id="messageForm" onsubmit="sendMessage(event)">
+                <div class="input-group">
+                    <input type="hidden" id="current-phone" name="phone_number">
+                    <input type="text" class="form-control" name="message" 
+                           placeholder="Digite sua mensagem..." required>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal fade" id="newMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fab fa-whatsapp me-2"></i>Nova Mensagem
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('send_whatsapp') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_phone" class="form-label">Cliente</label>
+                        <select class="form-select" id="new_phone" name="phone_number" required>
+                            <option value="">Selecione um cliente...</option>
+                            {% for client in clients %}
+                                {% if client.whatsapp %}
+                                <option value="{{ client.whatsapp }}">{{ client.name }} ({{ client.whatsapp }})</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Ou digite o número manualmente:</div>
+                        <input type="text" class="form-control mt-2" id="manual_phone" 
+                               placeholder="+55 11 99999-9999">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_message" class="form-label">Mensagem</label>
+                        <textarea class="form-control" id="new_message" name="message" rows="4" required
+                                  placeholder="Digite sua mensagem..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Mensagens Rápidas</label>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start" 
+                                    onclick="setNewQuickMessage('Olá! Como posso ajudá-lo com seu seguro hoje?')">
+                                Saudação
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start"
+                                    onclick="setNewQuickMessage('Obrigado por entrar em contato conosco. Em breve retornaremos.')">
+                                Agradecimento
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm text-start"
+                                    onclick="setNewQuickMessage('Sua apólice está próxima do vencimento. Que tal renovarmos?')">
+                                Lembrete de Renovação
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fab fa-whatsapp me-2"></i>Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/whatsapp.js') }}"></script>
+{% endblock %}
