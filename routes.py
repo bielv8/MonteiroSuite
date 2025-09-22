@@ -72,12 +72,33 @@ def dashboard():
     
     total_cards = KanbanCard.query.count()
     
+    # Get WhatsApp status for dashboard
+    try:
+        whatsapp_status = whatsapp_service.get_session_status()
+        whatsapp_connected = whatsapp_service.is_connected()
+        qr_code = None
+        if not whatsapp_connected:
+            qr_response = whatsapp_service.get_qr_code()
+            qr_code = qr_response.get('qrcode') if qr_response.get('success') else None
+    except Exception as e:
+        logger.error(f"Erro ao verificar status do WhatsApp: {e}")
+        whatsapp_status = {"error": str(e)}
+        whatsapp_connected = False
+        qr_code = None
+    
+    # Get recent clients for WhatsApp quick access
+    recent_clients = Client.query.filter(Client.phone.isnot(None)).order_by(Client.created_at.desc()).limit(10).all()
+    
     return render_template('dashboard.html',
                          total_clients=total_clients,
                          active_clients=active_clients,
                          prospects=prospects,
                          kanban_stats=kanban_stats,
-                         total_cards=total_cards)
+                         total_cards=total_cards,
+                         whatsapp_status=whatsapp_status,
+                         whatsapp_connected=whatsapp_connected,
+                         qr_code=qr_code,
+                         recent_clients=recent_clients)
 
 @app.route('/kanban')
 @login_required

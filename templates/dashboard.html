@@ -12,6 +12,159 @@
     </div>
 </div>
 
+<!-- WhatsApp Central Panel -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow border-left-success">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fab fa-whatsapp me-2"></i>Centro de WhatsApp Business
+                </h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                       data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                         aria-labelledby="dropdownMenuLink">
+                        <a class="dropdown-item" href="{{ url_for('whatsapp') }}">
+                            <i class="fas fa-cog fa-sm fa-fw mr-2 text-gray-400"></i>
+                            Configurações Avançadas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Status da Conexão -->
+                    <div class="col-lg-4 mb-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center">
+                                {% if whatsapp_connected %}
+                                    <div class="text-success mb-2">
+                                        <i class="fas fa-check-circle fa-3x"></i>
+                                    </div>
+                                    <h5 class="text-success">WhatsApp Conectado</h5>
+                                    <p class="text-muted">Pronto para enviar mensagens</p>
+                                    <form action="{{ url_for('close_whatsapp_session') }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Desconectar
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <div class="text-warning mb-2">
+                                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                    </div>
+                                    <h5 class="text-warning">WhatsApp Desconectado</h5>
+                                    <p class="text-muted">Conecte seu WhatsApp para começar</p>
+                                    <form action="{{ url_for('start_whatsapp_session') }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fab fa-whatsapp me-1"></i>Conectar WhatsApp
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- QR Code -->
+                    <div class="col-lg-4 mb-3">
+                        {% if not whatsapp_connected and qr_code %}
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-primary mb-3">Escaneie o QR Code</h6>
+                                <div id="qrcode-container" class="mb-3">
+                                    <img src="data:image/png;base64,{{ qr_code }}" 
+                                         alt="QR Code WhatsApp" class="img-fluid" 
+                                         style="max-width: 200px;">
+                                </div>
+                                <p class="text-muted small">
+                                    Abra o WhatsApp no seu celular → Menu → WhatsApp Web → Escaneie o código
+                                </p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-primary mb-3">Mensagem Rápida</h6>
+                                <form action="{{ url_for('send_whatsapp_message') }}" method="POST">
+                                    <div class="mb-3">
+                                        <select class="form-select form-select-sm" name="phone" required>
+                                            <option value="">Selecione um cliente...</option>
+                                            {% for client in recent_clients %}
+                                                <option value="{{ client.phone }}">{{ client.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control form-control-sm" name="message" 
+                                                 rows="3" placeholder="Digite sua mensagem..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm w-100">
+                                        <i class="fas fa-paper-plane me-1"></i>Enviar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Ações Rápidas -->
+                    <div class="col-lg-4 mb-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="text-primary mb-3">Ações Rápidas</h6>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('whatsapp') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-comments me-1"></i>Centro de Conversas
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="sendBulkMessage()">
+                                        <i class="fas fa-bullhorn me-1"></i>Mensagem em Massa
+                                    </button>
+                                    <a href="{{ url_for('clients') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-users me-1"></i>Gerenciar Clientes
+                                    </a>
+                                    <button class="btn btn-outline-info btn-sm" onclick="showQuickTemplates()">
+                                        <i class="fas fa-templates me-1"></i>Modelos Rápidos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Últimos Clientes com WhatsApp -->
+                {% if recent_clients %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="text-primary">Clientes Recentes com WhatsApp</h6>
+                        <div class="row">
+                            {% for client in recent_clients[:6] %}
+                            <div class="col-md-4 col-lg-2 mb-2">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="mb-1">
+                                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                                        </div>
+                                        <small class="d-block font-weight-bold">{{ client.name[:12] }}...</small>
+                                        <small class="text-muted d-block">{{ client.phone }}</small>
+                                        <button class="btn btn-success btn-xs mt-1" 
+                                                onclick="quickWhatsApp('{{ client.phone }}', '{{ client.name }}')">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -142,6 +295,91 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Atualizar status do WhatsApp automaticamente
+function updateWhatsAppStatus() {
+    fetch('/whatsapp/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.connected) {
+                updateConnectionStatus(true);
+            } else {
+                updateConnectionStatus(false);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar status:', error);
+        });
+}
+
+// Atualizar interface de conexão
+function updateConnectionStatus(connected) {
+    // Esta função será expandida conforme necessário
+    console.log('Status WhatsApp:', connected ? 'Conectado' : 'Desconectado');
+}
+
+// Mensagem rápida para cliente específico
+function quickWhatsApp(phone, name) {
+    const message = prompt(`Enviar mensagem para ${name} (${phone}):`);
+    if (message && message.trim()) {
+        fetch('/whatsapp/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                phone: phone,
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Mensagem enviada com sucesso!');
+            } else {
+                alert('Erro ao enviar mensagem: ' + (data.error || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao enviar mensagem.');
+        });
+    }
+}
+
+// Mensagem em massa
+function sendBulkMessage() {
+    alert('Funcionalidade de mensagem em massa será implementada em breve!');
+}
+
+// Modelos rápidos
+function showQuickTemplates() {
+    const templates = [
+        'Olá! Como posso ajudá-lo com seu seguro hoje?',
+        'Sua apólice está próxima do vencimento. Gostaria de renovar?',
+        'Obrigado por entrar em contato. Em breve retornaremos.',
+        'Temos uma proposta especial para você. Gostaria de saber mais?'
+    ];
+    
+    let templateList = 'Modelos disponíveis:\n\n';
+    templates.forEach((template, index) => {
+        templateList += `${index + 1}. ${template}\n\n`;
+    });
+    
+    alert(templateList);
+}
+
+// Verificar status a cada 30 segundos
+setInterval(updateWhatsAppStatus, 30000);
+
+// Verificar na inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    updateWhatsAppStatus();
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}
