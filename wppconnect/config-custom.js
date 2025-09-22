@@ -10,18 +10,18 @@ module.exports = {
   maxListeners: 15,
   customUserDataDir: './userDataDir/',
   webhook: {
-    url: null, // Será configurado dinamicamente pelo Flask
-    autoDownload: true,
+    url: '', // Desabilitado para evitar erros
+    autoDownload: false,
     uploadS3: false,
-    readMessage: true,
+    readMessage: false,
     allUnreadOnStart: false,
-    listenAcks: true,
-    onPresenceChanged: true,
-    onParticipantsChanged: true,
-    onReactionMessage: true,
-    onPollResponse: true,
-    onRevokedMessage: true,
-    onLabelUpdated: true,
+    listenAcks: false,
+    onPresenceChanged: false,
+    onParticipantsChanged: false,
+    onReactionMessage: false,
+    onPollResponse: false,
+    onRevokedMessage: false,
+    onLabelUpdated: false,
     onSelfMessage: false,
     ignore: ['status@broadcast'],
   },
@@ -39,7 +39,7 @@ module.exports = {
     daysToArchive: 45,
   },
   log: {
-    level: 'info', // Menos verboso para produção
+    level: 'silly', // Para depuração conforme sugerido na documentação
     logger: ['console', 'file'],
   },
   createOptions: {
