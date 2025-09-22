@@ -7,6 +7,7 @@ import logging
 from app import app, db
 from models import User, Client, KanbanColumn, KanbanCard
 from forms import LoginForm, ClientForm, KanbanCardForm, UserForm
+from whatsapp_service import whatsapp_service
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +243,156 @@ def users():
     
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('users.html', users=users)
+
+# ==================== ROTAS DO WHATSAPP ====================
+
+@app.route('/whatsapp')
+@login_required
+def whatsapp():
+    """Página principal do WhatsApp"""
+    # Verificar status da conexão
+    status = whatsapp_service.get_session_status()
+    is_connected = whatsapp_service.is_connected()
+    
+    # Obter QR Code se não estiver conectado
+    qr_code = None
+    if not is_connected:
+        qr_response = whatsapp_service.get_qr_code()
+        qr_code = qr_response.get('qrcode') if qr_response.get('success') else None
+    
+    return render_template('whatsapp.html', 
+                         status=status, 
+                         is_connected=is_connected,
+                         qr_code=qr_code)
+
+@app.route('/whatsapp/start-session', methods=['POST'])
+@login_required
+def start_whatsapp_session():
+    """Inicia uma nova sessão do WhatsApp"""
+    try:
+        result = whatsapp_service.start_session()
+        if result.get('success', True):
+            flash('Sessão do WhatsApp iniciada com sucesso!', 'success')
+            log_activity('whatsapp_session_start', 'Sessão do WhatsApp iniciada')
+        else:
+            flash(f'Erro ao iniciar sessão: {result.get("message", "Erro desconhecido")}', 'error')
+    except Exception as e:
+        flash(f'Erro ao conectar com o WhatsApp: {str(e)}', 'error')
+        logger.error(f"Erro ao iniciar sessão WhatsApp: {e}")
+    
+    return redirect(url_for('whatsapp'))
+
+@app.route('/whatsapp/close-session', methods=['POST'])
+@login_required
+def close_whatsapp_session():
+    """Fecha a sessão atual do WhatsApp"""
+    try:
+        result = whatsapp_service.close_session()
+        if result.get('success', True):
+            flash('Sessão do WhatsApp encerrada com sucesso!', 'info')
+            log_activity('whatsapp_session_close', 'Sessão do WhatsApp encerrada')
+        else:
+            flash(f'Erro ao encerrar sessão: {result.get("message", "Erro desconhecido")}', 'error')
+    except Exception as e:
+        flash(f'Erro ao desconectar do WhatsApp: {str(e)}', 'error')
+        logger.error(f"Erro ao encerrar sessão WhatsApp: {e}")
+    
+    return redirect(url_for('whatsapp'))
+
+@app.route('/whatsapp/status', methods=['GET'])
+@login_required
+def whatsapp_status():
+    """API para verificar status do WhatsApp"""
+    try:
+        status = whatsapp_service.get_session_status()
+        is_connected = whatsapp_service.is_connected()
+        health = whatsapp_service.health_check()
+        
+        return jsonify({
+            'connected': is_connected,
+            'status': status,
+            'health': health,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'connected': False,
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/whatsapp/send-message', methods=['POST'])
+@login_required
+def send_whatsapp_message():
+    """Envia uma mensagem via WhatsApp"""
+    try:
+        data = request.get_json()
+        phone = data.get('phone')
+        message = data.get('message')
+        
+        if not phone or not message:
+            return jsonify({'error': 'Telefone e mensagem são obrigatórios'}), 400
+        
+        result = whatsapp_service.send_text_message(phone, message)
+        
+        if result.get('success', True):
+            log_activity('whatsapp_message_sent', f'Mensagem enviada para {phone}')
+            return jsonify({'success': True, 'result': result})
+        else:
+            return jsonify({'error': result.get('message', 'Erro ao enviar mensagem')}), 500
+            
+    except Exception as e:
+        logger.error(f"Erro ao enviar mensagem WhatsApp: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/whatsapp/contacts', methods=['GET'])
+@login_required
+def get_whatsapp_contacts():
+    """Obtém lista de contatos do WhatsApp"""
+    try:
+        contacts = whatsapp_service.get_all_contacts()
+        return jsonify(contacts)
+    except Exception as e:
+        logger.error(f"Erro ao obter contatos WhatsApp: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/whatsapp/chats', methods=['GET'])
+@login_required
+def get_whatsapp_chats():
+    """Obtém lista de conversas do WhatsApp"""
+    try:
+        chats = whatsapp_service.get_all_chats()
+        return jsonify(chats)
+    except Exception as e:
+        logger.error(f"Erro ao obter conversas WhatsApp: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/client/<int:client_id>/send-whatsapp', methods=['POST'])
+@login_required
+def send_whatsapp_to_client(client_id):
+    """Envia mensagem WhatsApp para um cliente específico"""
+    try:
+        client = Client.query.get_or_404(client_id)
+        data = request.get_json()
+        message = data.get('message')
+        
+        if not message:
+            return jsonify({'error': 'Mensagem é obrigatória'}), 400
+        
+        if not client.phone:
+            return jsonify({'error': 'Cliente não possui telefone cadastrado'}), 400
+        
+        result = whatsapp_service.send_text_message(client.phone, message)
+        
+        if result.get('success', True):
+            log_activity('client_whatsapp_sent', f'WhatsApp enviado para cliente {client.name}')
+            return jsonify({'success': True, 'result': result})
+        else:
+            return jsonify({'error': result.get('message', 'Erro ao enviar mensagem')}), 500
+            
+    except Exception as e:
+        logger.error(f"Erro ao enviar WhatsApp para cliente {client_id}: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/users/new', methods=['GET', 'POST'])
 @login_required
