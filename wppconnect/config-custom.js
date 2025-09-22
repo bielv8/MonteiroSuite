@@ -8,7 +8,7 @@ module.exports = {
   startAllSession: true,
   tokenStoreType: 'file',
   maxListeners: 15,
-  customUserDataDir: './userDataDir/',
+  customUserDataDir: null, // Usar diretório padrão para evitar problemas
   webhook: {
     url: '', // Desabilitado para evitar erros
     autoDownload: false,
@@ -44,20 +44,13 @@ module.exports = {
   },
   createOptions: {
     browserArgs: [
-      '--disable-web-security',
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process', // Importante para ambientes containerizados
       '--disable-gpu',
-      '--disable-background-timer-throttling',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-      '--disable-features=TranslateUI',
-      '--disable-ipc-flooding-protection',
+      '--no-first-run',
+      '--disable-extensions',
+      '--disable-default-apps',
     ],
     linkPreviewApiServers: null,
   },

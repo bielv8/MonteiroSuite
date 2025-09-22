@@ -289,6 +289,11 @@ def whatsapp():
     # Obter dados necessários para o template
     clients = Client.query.filter(Client.phone.isnot(None)).order_by(Client.name).all()
     
+    # Debug info para verificar se temos qr_code
+    logger.debug(f"QR Code disponível: {qr_code is not None}")
+    if qr_code:
+        logger.debug(f"QR Code primeiros 50 chars: {qr_code[:50]}...")
+    
     return render_template('whatsapp.html', 
                          status=status, 
                          is_connected=is_connected,
