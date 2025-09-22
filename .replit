@@ -1,4 +1,4 @@
-modules = ["python-3.11"]
+modules = ["web", "nodejs-20", "python-3.11"]
 
 [nix]
 channel = "stable-25_05"
@@ -33,5 +33,10 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 46535
+externalPort = 3000
+
 [agent]
 integrations = ["python_log_in_with_replit==1.0.0", "python_database==1.0.0"]
+expertMode = true
