@@ -3,11 +3,44 @@ const express = require('express');
 const cors = require('cors');
 const config = require('./config-custom.js');
 
-// Importar controladores do WPPConnect
-const sessionController = require('./dist/controller/sessionController');
-const messageController = require('./dist/controller/messageController');
-const groupController = require('./dist/controller/groupController');
-const deviceController = require('./dist/controller/deviceController');
+// Importar funções dos controladores do WPPConnect
+const { 
+  startSession, 
+  closeSession, 
+  getSessionState, 
+  getQrCode 
+} = require('./dist/controller/sessionController');
+
+const { 
+  sendMessage, 
+  sendImage, 
+  sendFile, 
+  sendFileFromBase64, 
+  sendVoice,
+  sendLocation,
+  sendLinkPreview,
+  sendContactVcard,
+  sendButtons,
+  sendListMenu
+} = require('./dist/controller/messageController');
+
+const { 
+  createGroup, 
+  addParticipant, 
+  removeParticipant, 
+  promoteParticipant,
+  demoteParticipant,
+  getGroupMembers,
+  getGroupAdmins,
+  getGroupInviteLink
+} = require('./dist/controller/groupController');
+
+const { 
+  getAllContacts, 
+  getAllChats, 
+  getAllGroups, 
+  getBatteryLevel 
+} = require('./dist/controller/deviceController');
 
 const app = express();
 
@@ -31,38 +64,38 @@ app.use('/api', (req, res, next) => {
 });
 
 // Rotas de sessão
-app.post('/api/:session/start-session', sessionController.start);
-app.post('/api/:session/close-session', sessionController.close);
-app.get('/api/:session/status-session', sessionController.status);
-app.get('/api/:session/qrcode-session', sessionController.qrcode);
+app.post('/api/:session/start-session', startSession);
+app.post('/api/:session/close-session', closeSession);
+app.get('/api/:session/status-session', getSessionState);
+app.get('/api/:session/qrcode-session', getQrCode);
 
 // Rotas de mensagens
-app.post('/api/:session/send-message', messageController.sendMessage);
-app.post('/api/:session/send-image', messageController.sendImage);
-app.post('/api/:session/send-file', messageController.sendFile);
-app.post('/api/:session/send-file-base64', messageController.sendFileFromBase64);
-app.post('/api/:session/send-voice', messageController.sendVoice);
-app.post('/api/:session/send-location', messageController.sendLocation);
-app.post('/api/:session/send-link-preview', messageController.sendLinkPreview);
-app.post('/api/:session/send-contact-vcard', messageController.sendContactVcard);
-app.post('/api/:session/send-buttons', messageController.sendButtons);
-app.post('/api/:session/send-list-menu', messageController.sendListMenu);
+app.post('/api/:session/send-message', sendMessage);
+app.post('/api/:session/send-image', sendImage);
+app.post('/api/:session/send-file', sendFile);
+app.post('/api/:session/send-file-base64', sendFileFromBase64);
+app.post('/api/:session/send-voice', sendVoice);
+app.post('/api/:session/send-location', sendLocation);
+app.post('/api/:session/send-link-preview', sendLinkPreview);
+app.post('/api/:session/send-contact-vcard', sendContactVcard);
+app.post('/api/:session/send-buttons', sendButtons);
+app.post('/api/:session/send-list-menu', sendListMenu);
 
 // Rotas de grupos
-app.post('/api/:session/create-group', groupController.createGroup);
-app.post('/api/:session/add-participant-group', groupController.addParticipant);
-app.post('/api/:session/remove-participant-group', groupController.removeParticipant);
-app.post('/api/:session/promote-participant-group', groupController.promoteParticipant);
-app.post('/api/:session/demote-participant-group', groupController.demoteParticipant);
-app.get('/api/:session/group-members/:groupId', groupController.getGroupMembers);
-app.get('/api/:session/group-admins/:groupId', groupController.getGroupAdmins);
-app.get('/api/:session/group-invite-link/:groupId', groupController.getGroupInviteLink);
+app.post('/api/:session/create-group', createGroup);
+app.post('/api/:session/add-participant-group', addParticipant);
+app.post('/api/:session/remove-participant-group', removeParticipant);
+app.post('/api/:session/promote-participant-group', promoteParticipant);
+app.post('/api/:session/demote-participant-group', demoteParticipant);
+app.get('/api/:session/group-members/:groupId', getGroupMembers);
+app.get('/api/:session/group-admins/:groupId', getGroupAdmins);
+app.get('/api/:session/group-invite-link/:groupId', getGroupInviteLink);
 
 // Rotas de contatos e dispositivos
-app.get('/api/:session/all-contacts', deviceController.getAllContacts);
-app.get('/api/:session/all-chats', deviceController.getAllChats);
-app.get('/api/:session/all-groups', deviceController.getAllGroups);
-app.get('/api/:session/battery-level', deviceController.getBatteryLevel);
+app.get('/api/:session/all-contacts', getAllContacts);
+app.get('/api/:session/all-chats', getAllChats);
+app.get('/api/:session/all-groups', getAllGroups);
+app.get('/api/:session/battery-level', getBatteryLevel);
 
 // Rota de status da API
 app.get('/api/status', (req, res) => {
