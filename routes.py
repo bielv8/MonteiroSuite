@@ -279,12 +279,22 @@ def whatsapp():
     qr_code = None
     if not is_connected:
         qr_response = whatsapp_service.get_qr_code()
-        qr_code = qr_response.get('qrcode') if qr_response.get('success') else None
+        qr_raw = qr_response.get('qrcode') if qr_response.get('success') else None
+        # Normalizar QR code - remover prefixo se já existir
+        if qr_raw and qr_raw.startswith('data:image'):
+            qr_code = qr_raw.split(',', 1)[1] if ',' in qr_raw else qr_raw
+        else:
+            qr_code = qr_raw
+    
+    # Obter dados necessários para o template
+    clients = Client.query.filter(Client.phone.isnot(None)).order_by(Client.name).all()
     
     return render_template('whatsapp.html', 
                          status=status, 
                          is_connected=is_connected,
-                         qr_code=qr_code)
+                         qr_code=qr_code,
+                         clients=clients,
+                         messages=[])
 
 @app.route('/whatsapp/start-session', methods=['POST'])
 @login_required

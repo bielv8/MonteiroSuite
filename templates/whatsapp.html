@@ -118,6 +118,11 @@
     <div class="chat-sidebar">
         <div class="chat-header">
             <h6 class="mb-0">Conversas</h6>
+            {% if not is_connected %}
+            <div class="text-center mt-2">
+                <small class="text-muted">WhatsApp desconectado</small>
+            </div>
+            {% endif %}
         </div>
         
         <div class="flex-grow-1 overflow-auto" id="conversations-list">
@@ -184,11 +189,50 @@
         </div>
         
         <div class="chat-messages" id="chat-messages">
+            {% if not is_connected %}
             <div class="empty-chat">
-                <i class="fab fa-whatsapp fa-4x mb-3"></i>
-                <h5>Selecione uma conversa</h5>
-                <p>Escolha uma conversa à esquerda para ver as mensagens</p>
+                <i class="fab fa-whatsapp fa-4x mb-3 text-danger"></i>
+                <h5>WhatsApp Desconectado</h5>
+                <p class="mb-4">Para usar o WhatsApp, você precisa conectar primeiro</p>
+                
+                <form action="{{ url_for('start_whatsapp_session') }}" method="POST" class="mb-4">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-qrcode me-2"></i>Conectar WhatsApp
+                    </button>
+                </form>
+                
+                {% if qr_code %}
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Escaneie o QR Code</h6>
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code WhatsApp" class="img-fluid" style="max-width: 300px;">
+                        <p class="text-muted mt-2 small">Abra o WhatsApp no seu telefone e escaneie este código</p>
+                        
+                        <button type="button" class="btn btn-outline-success btn-sm mt-2" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i>Atualizar QR Code
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    QR Code não disponível. Clique em "Conectar WhatsApp" para gerar.
+                </div>
+                {% endif %}
             </div>
+            {% else %}
+            <div class="empty-chat">
+                <i class="fab fa-whatsapp fa-4x mb-3 text-success"></i>
+                <h5>WhatsApp Conectado!</h5>
+                <p>Selecione uma conversa à esquerda para ver as mensagens</p>
+                
+                <form action="{{ url_for('close_whatsapp_session') }}" method="POST" class="mt-3">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Desconectar
+                    </button>
+                </form>
+            </div>
+            {% endif %}
         </div>
         
         <div class="chat-input" id="chat-input" style="display: none;">
