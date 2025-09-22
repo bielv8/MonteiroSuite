@@ -20,8 +20,16 @@ def create_app():
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
-    # Database configuration - Using SQLite for lightweight deployment
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///monteiro_lite.db"
+    # Database configuration
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_recycle": 300,
+            "pool_pre_ping": True,
+        }
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///instance/monteiro_lite.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
     # Initialize extensions
